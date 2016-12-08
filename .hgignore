@@ -1,0 +1,18 @@
+syntax: glob
+
+*~
+*.asv
+*.pdf
+*.ps
+*.mat
+*.txt
+*.bak
+\#*\#
+scratch.m
+test_batch.m
+
+syntax: regexp
+
+^\#.*\#
+^\.\#.*\#
+hs_err_pid.*log

@@ -1,0 +1,15 @@
+data/write_KR_data_for_marcy.m.i
+data/Kernel_regression_Tim_older_2.m.i
+data/Kernel_regression_Tim_older_1.m.i
+data/calculate_SWC_T_NEE_kernel_regression.m.i
+data/plot_kernel_regressions.m.i
+data/get_kernel_regression_data.m.i
+data/.hgignore.i
+data/plot_kernel_regressions_by_site.m.i
+data/Kernel_regression_main.m.i
+data/T_SWC_flux_sfc.m.i
+data/ksrmv.m.i
+data/plot_T_SWC_flux_surface.m.i
+data/scratch.m.i
+data/Kernel_regression_Tim.m.i
+data/Kernel_regression_for_DC_022611.m.i
