@@ -62,7 +62,7 @@ else
     all_data = cell( 6, 1 );
 end
 
-for sitecode = 1:1
+for sitecode = 1:6
 
     % parsing takes a minutes -- option to load saved data
     if load_stored_data
