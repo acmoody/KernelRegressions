@@ -8,6 +8,7 @@ syntax: glob
 *.txt
 *.bak
 *.png
+*.mat
 \#*\#
 scratch.m
 test_batch.m
