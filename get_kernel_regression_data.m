@@ -4,8 +4,10 @@ function data = get_kernel_regression_data( sitecode, varargin)
 
 args = inputParser;
 args.addRequired( 'sitecode', @(x) ( isintval( x ) | isa( x, 'UNM_sites' ) ) );
+
 date_validation_min = @(x) isnumeric(x) && x(1) > datenum('2005-12-31') ;
 date_validation_max = @(x) isnumeric(x) && x(1) < datenum(now) ;
+
 args.addOptional( 'date_start', [], date_validation_min );
 args.addOptional( 'date_end', [], date_validation_max );
 
@@ -17,6 +19,7 @@ date_end = args.Results.date_end;
 fprintf( 'parsing %s %d\n', char( UNM_sites( sitecode ) ) );
 site_info = parse_yaml_config( sitecode , 'SiteVars');
 aflx_site_name = site_info.ameriflux_name;
+
 fname_flux = fullfile( 'C:' , 'Code', 'NMEG_utils',...
                 'processed_data', 'daily_aflx',...
                 'FLUXNET2015_b', 'NMEG',...
@@ -175,7 +178,6 @@ else
 
     % convert from dataset array to double array
     % data = double( data );
-    
     %data.DOY = floor( data.DOY );  % remove fractional DOY
 
 end  % if ameriflux files exist

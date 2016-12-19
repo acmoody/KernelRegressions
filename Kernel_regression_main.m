@@ -6,16 +6,27 @@
 
 % calculate the T--SWC--NEE histograms, kernel regressions, and climate space
 % surfaces
+
+sitelist = {UNM_sites.MCon, UNM_sites.PPine, ...
+    UNM_sites.SLand, UNM_sites.GLand, UNM_sites.New_GLand, ...
+    UNM_sites.JSav,  UNM_sites.PJ, UNM_sites.PJ_girdle };
+
 load_stored_data = true;
 surface_data = Kernel_regression_Tim( load_stored_data );
 
-for this_site = 1:1
-    h_fig = plot( surface_data{ this_site } );
+for i = 1:length(sitelist)
+    this_site = sitelist{i}  
+    [h] = plot( surface_data{i } ) ;
+    fprintf('Plotting %s...\n',char(surface_data{i}.sitecode));
     fname = fullfile( 'C:\Code\KernelRegressions\plots', ...                                         
                       sprintf( '%s.png', char( UNM_sites( this_site ) ) ) );
-    saveas( h_fig, fname );
-    close( h_fig );
-    
+  for j = 1:4
+      fname = fullfile( 'C:\Code\KernelRegressions\plots', ...
+          sprintf( '%s.png', [char( UNM_sites( this_site ) ),'_',num2str(j)] ) );
+      saveas( h(j), fname  );
+      
+  end
+    close( h );
 end
 
 if false

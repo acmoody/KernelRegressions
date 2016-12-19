@@ -4,27 +4,36 @@ function results = Kernel_regression_Tim( load_stored_data )
 
 
 %load_stored_data = false;
-shallow_night = cell( 6, 1 );
-shallow_day = cell( 6, 1 );
-deep_10_20_day = cell( 6, 1 );
-deep_20_30_day = cell( 6, 1 );
-deep_30plus_day = cell( 6, 1 );
-all_agg_data = cell( 6, 1 );
-climspace_shallow = cell( 6, 1 );
-climspace_deep1 = cell( 6, 1 );
-climspace_deep2 = cell( 6, 1 );
-climspace_deep3 = cell( 6, 1 );
-results = cell( 6, 1 );
+% shallow_night = cell( 6, 1 );
+% shallow_day = cell( 6, 1 );
+shallow = cell( 8 , 1 );
+mid = cell( 8 , 1);
+deep = cell( 8 ,1);
+% deep_10_20_day = cell( 6, 1 );
+% deep_20_30_day = cell( 6, 1 );
+% deep_30plus_day = cell( 6, 1 );
+ all_agg_data = cell( 8, 1 );
+ climspace_shallow = cell( 8, 1 );
+ climspace_mid = cell( 8, 1 );
+ climspace_deep = cell( 8, 1 );
+% climspace_deep1 = cell( 6, 1 );
+% climspace_deep2 = cell( 6, 1 );
+% climspace_deep3 = cell( 6, 1 );
+results = cell( 8, 1 );
 %colormap_greens = flipud( cbrewer( 'seq', 'YlGn', 100 ) );
 
 % sitecode key
-afnames(1,:) = 'US-Seg'; % 1-GLand
-afnames(2,:) = 'US-Ses'; % 2-SLand
-afnames(3,:) = 'US-Wjs'; % 3-JSav
-afnames(4,:) = 'US-Mpj'; % 4-PJ
-afnames(5,:) = 'US-Vcp'; % 5-PPine
-afnames(6,:) = 'US-Vcm'; % 6-MCon
-afnames(7,:) = 'US-FR2'; % 7-TX_savanna
+% % I don't think this is used for anything...
+% afnames(1,:) = 'US-Seg'; % 1-GLand
+% afnames(2,:) = 'US-Ses'; % 2-SLand
+% afnames(3,:) = 'US-Sen';
+% afnames(4,:) = 'US-Wjs'; % 3-JSav
+% afnames(5,:) = 'US-Mpj'; % 4-PJ
+% 
+% afnames(6,:) = 'US-Vcp'; % 5-PPine
+% afnames(7,:) = 'US-Vcm'; % 6-MCon
+% 
+% %afnames(7,:) = 'US-FR2'; % 7-TX_savanna
 
 colour(1,:)=[0.9 0.5 0.0];
 colour(2,:)=[0.6 0.2 0];
@@ -59,17 +68,21 @@ xax_max = [ 28, 28, 24, 24, 19, 19 ];
 if load_stored_data
     load( 'kernel_regression_parsed_data.mat' );
 else
-    all_data = cell( 6, 1 );
+    all_data = cell( 8, 1 );
 end
 
-for sitecode = 1:6
+sitelist = {UNM_sites.MCon, UNM_sites.PPine, ...
+    UNM_sites.SLand, UNM_sites.GLand, UNM_sites.New_GLand, ...
+    UNM_sites.JSav,  UNM_sites.PJ, UNM_sites.PJ_girdle };
 
+for  i = 1:length(sitelist)
+    sitecode = sitelist{i};
     % parsing takes a minutes -- option to load saved data
     if load_stored_data
-        data = all_data{ sitecode };        
+        data = all_data{ i };        
     else
         data = get_kernel_regression_data( sitecode );
-        all_data{ sitecode } = data;
+        all_data{ i } = data;
     end
     
     
@@ -79,10 +92,10 @@ for sitecode = 1:6
     mu2g=((1./1000000)*12)*60*30;
     
     % only consider data during growing season
-    growing_season = ( ( data.DOY >= firstday( sitecode ) ) & ...
-                       ( data.DOY <= lastday( sitecode ) ) );
-    data = data( find( growing_season ), : );
-    
+%     growing_season = ( ( data.DOY >= firstday( sitecode ) ) & ...
+%                        ( data.DOY <= lastday( sitecode ) ) );
+%     data = data( find( growing_season ), : );
+%     
 %  Tims code separates NEE into day and nighttime values, but our files no    
 %     % separate NEE into daytime, nighttime
 %     data.NEE_day = data.FC .* mu2g;
@@ -165,7 +178,7 @@ for sitecode = 1:6
     pcp_remove( pcp_remove > size( data, 1 ) ) = [];
     data( pcp_remove , : ) = [];
             
-    all_agg_data{ sitecode } = data;
+    all_agg_data{ i } = data;
     % Temperature response
 
     % Daily NEE
@@ -228,7 +241,7 @@ for sitecode = 1:6
 %                               sprintf('%s surfaces', ...
 %                                       char( UNM_sites( sitecode ) ) ) );
 %                                   
-       results{ sitecode } = ...
+       results{ i } = ...
         site_T_SWC_flux_data( UNM_sites( sitecode ), ...
                               shallow, ...
                               mid, ...

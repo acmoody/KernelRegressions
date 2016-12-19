@@ -29,7 +29,7 @@ methods
     end  % constructor
 
 %--------------------------------------------------
-    function [h_fig1 h_fig2] =  plot( obj, varargin )
+    function [h] =  plot( obj, varargin )
 
 %     h_fig1 = figure( 'Units', 'Inches', ...
 %                     'Position', [ 0, 0, 24, 13 ], ...
@@ -44,7 +44,8 @@ methods
 %     n_panels_v = 3; % three SWC depth panels vertically
 % ------------------------------------------------------------------------
 %  PLOT 1 : FLUX KERNEL REGRESSIONS AND ALL-TIME CLIMATE SPACE, ALL DEPTHS
-    h_fig1 = figure
+    h_fig1 = figure( 'Units', 'pixels', ...
+                     'Position', [254 218 832 876] ); 
     f1h = 2 ; 
     f1v = 3 ;
     % ------------------------------------
@@ -57,7 +58,12 @@ methods
               'ax', this_ax, ...
               'main_title', '', ...
               'cbar_lab', 'NEE' );
-    end
+          ylabel({char(sfc_flds(fi)) ;'\theta'})
+          
+          if fi == 3
+            xlabel('T_s_o_i_l')
+          end
+    end 
     
     % -------------------------------
     % PLOT THE ALL-TIME CLIMATE SPACES
@@ -83,7 +89,13 @@ methods
         set( this_ax, 'clim', [ 0, alltime_max_frac * 100.0 ] );
         set( get( h_cbar, 'Title' ), ...
              'String', '% days' );
+         
+        %ylabel(
+        if fi == 1 
         title( 'all-time' );
+        elseif fi == 3
+            xlabel( 'T_s_o_i_l' );
+        end
         
         % draw gridlines at the SWC edges -- their spacing is contstant
         % in log space so is perhaps counterintuitive when plotted in
@@ -103,16 +115,18 @@ methods
 % the yearly (seasonal?) climate spaces.
 % This will remain constant over any given year.
 NhPanels = 3;
-year = [2007:2016];
-v = numel(fieldnames(obj.clim_spaces)); % vertical panels 
-if mod(numel(this_cs.year_idx),NhPanels)
-    num_figs = floor(numel(this_cs.year_idx)/NhPanels) + 1;
+year = [2007:2015];
+
+%v = numel(fieldnames(obj.clim_spaces)); % vertical panels 
+v =3 ;
+if mod(numel(year),NhPanels)
+    num_figs = floor(9/NhPanels) + 1;
     h1 = 4;
     h2 = rem( 10, NhPanels );
 else
-    num_figs = numel(this_cs.year_idx)/ NhPanels;
+    num_figs = numel(year)/ NhPanels;
 end % PANEL DETERMINATION
-    
+year = reshape(year, NhPanels, num_figs);    
 
     
     % Normalize colors to largest fraction in climate space
@@ -129,37 +143,32 @@ end % PANEL DETERMINATION
     
     depth_flds = fieldnames( obj.clim_spaces );
     for fi = 1:num_figs
-        h_fig2( fi ) = figure;
-        start_yr = 1+(fi-1)*4;
-        end_yr = start_yr + NhPanels - 1;
-            try
-                year_flds = year(start_yr:end_yr);
-                h = h1 ;
-            catch
-                year_flds = year(start_yr:end);
-                h = h2 ;
-            end
- %YEARS ARE SET
-        for yi = 1:numel(year_flds)
-            this_year_id = (year_flds) - 2007 + 1;
+        h_fig2( fi ) = figure( 'Units', 'pixels', ...
+                     'Position', [129 186 1473 895] ) ;
+        % Loop years
+        for yi = year( 1 , fi ) : year( 3 , fi )  
+            this_year_id = yi - year( 1 , fi ) +1 ;
             % FOR EACH YEAR PLOT EACH DEPTH
             for di = 1:numel(depth_flds)
                 print_title = false;
                 switch char(depth_flds(di))
                     case 'shallow'
                          this_cs = ...
-                             obj.clim_spaces.shallow.year_clim_space( :, : , this_year_id( yi ) );
+                             obj.clim_spaces.shallow.year_clim_space( :, : , yi - 2006  );
                          print_title = true ;
                     case 'mid'
                          this_cs = ...
-                             obj.clim_spaces.mid.year_clim_space( : , : , this_year_id( yi ) ) ;
+                             obj.clim_spaces.mid.year_clim_space( : , : , yi - 2006 ) ;
                          
                     case 'deep'
                         this_cs = ...
-                             obj.clim_spaces.deep.year_clim_space( : , : , this_year_id( yi ) ) ;
+                             obj.clim_spaces.deep.year_clim_space( : , : , yi - 2006 ) ;
                 end    
            % Place plot in depth di and year yi (row, column)
-            this_ax = subplotrc( v, h , di,  yi ); 
+            this_ax = subplotrc( v, NhPanels , di,  this_year_id );
+            
+           
+           % fprintf('v = %d h = %d di = %d yi = %d\n',v,h,di,yi)
             
             % MESH AND CONTOUR A YEAR AT A GIVEN DEPTH. ALL THE VALUES SEEM
             % TO BE THE SAME, USE ARBITRARY DEPTH
@@ -170,12 +179,18 @@ end % PANEL DETERMINATION
                       swc_grid, ...
                       this_cs * 100.0 ) ;
                       %this_cs.year_clim_space( :, :, this_cs_data ) * 100.0 );
-            originalPosition = get(gca,'position')    ; 
+            originalPosition = get(gca,'position');
+            if print_title
+                title( num2str( yi ) )
+            end
             
+            if this_year_id == 1
+                  ylabel({char( depth_flds(di) );'\theta'})
+            end
             h_cbar = colorbar();
             set( get( h_cbar, 'Title' ), ...
                  'String', '% days' );
-            %set( this_ax, 'clim', [ 0, max_frac * 100.0 ] );
+            set( this_ax, 'clim', [ 0, max_frac * 100.0 ] );
             % RESET PLOT AXES TO ORIGINAL POSITION
             set( this_ax , 'position', originalPosition) ; 
           
@@ -191,13 +206,14 @@ end % PANEL DETERMINATION
 %                 h_line = refline( 0, this_cs.swc_val( i ) );
 %                 set( h_line, 'Color', 'black', 'LineStyle', ':' );
 %             end
-        end
+            end % year
       %  fi = fi + 1;
-    end
+        end  %fig
 
-    suptitle( char( UNM_sites( obj.sitecode ) ) );
-    
+  %  suptitle( char( UNM_sites( obj.sitecode ) ) );
+   
     end  % plot method
+     h = [h_fig1  h_fig2(1) h_fig2(2) h_fig2(3)];
 %--------------------------------------------------
 
 end  % methods

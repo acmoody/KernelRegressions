@@ -51,8 +51,15 @@ annual_clim_space = ...
 % count the number of observations within each year
 n_days = accumarray( year_idx, ones( size( year_idx ) ) );
 
+% if there is less than half a year of data, get rid of it!
+idx = n_days < 180 ;  
+annual_clim_space(:,:,idx) = [] ;
+ data_years = unique(year); % get rid of that year of data, too
+ data_years(idx) = [] ;
+ 
+
 % divide by number of days in each year to get a fraction
-for i = 1:numel( unique( year ) )
+for i = 1:numel( data_years )
     annual_clim_space( :, :, i ) = annual_clim_space( :, :, i ) ./ n_days( i );
 end
 
