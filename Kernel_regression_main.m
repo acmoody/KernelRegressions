@@ -7,20 +7,29 @@
 % calculate the T--SWC--NEE histograms, kernel regressions, and climate space
 % surfaces
 
-sitelist = {UNM_sites.MCon, UNM_sites.PPine, ...
+
+sitelist = { UNM_sites.MCon, UNM_sites.PPine, UNM_sites.MCon_SS ...
     UNM_sites.SLand, UNM_sites.GLand, UNM_sites.New_GLand, ...
-    UNM_sites.JSav,  UNM_sites.PJ, UNM_sites.PJ_girdle };
+    UNM_sites.JSav,  UNM_sites.PJ, UNM_sites.PJ_girdle  };
+sitelist = {UNM_sites.GLand };
+load_stored_data = false;
+contour_var = 'NEE';
+makefigs = false;
+switch contour_var
+    case 'NEE'
+        surface_data = Kernel_regression_Tim( load_stored_data , sitelist);
+    case 'ET'
+        surface_data = Kernel_regression_ET( load_stored_data , sitelist);
+end
 
-load_stored_data = true;
-surface_data = Kernel_regression_Tim( load_stored_data );
-
+if makefigs
 for i = 1:length(sitelist)
-    this_site = sitelist{i}  
+    this_site = sitelist{i};  
     [h] = plot( surface_data{i } ) ;
     fprintf('Plotting %s...\n',char(surface_data{i}.sitecode));
     fname = fullfile( 'C:\Code\KernelRegressions\plots', ...                                         
                       sprintf( '%s.png', char( UNM_sites( this_site ) ) ) );
-  for j = 1:4
+  for j = 1:numel(h)
       fname = fullfile( 'C:\Code\KernelRegressions\plots', ...
           sprintf( '%s.png', [char( UNM_sites( this_site ) ),'_',num2str(j)] ) );
       saveas( h(j), fname  );
@@ -28,6 +37,8 @@ for i = 1:length(sitelist)
   end
     close( h );
 end
+end
+
 
 if false
     % all sites & depths integrated NEE
@@ -96,4 +107,12 @@ if false
 %                              '30+ cm SWC, daytime NEE', ...
 %                              'kernel_regressions_deep30plus_day', ...
 %                              false );
+
+h_fig =...
+    plot_kernel_regressions_single_site(...
+    surface_data{1,1}.surfaces.shallow,...
+    surface_data{1,1}.surfaces.mid,...
+    surface_data{1,1}.surfaces.deep,...
+    surface_data{1,1}.clim_spaces.shallow);
 end
+save('surface_data.mat','surface_data')

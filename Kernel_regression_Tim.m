@@ -1,25 +1,24 @@
-function results = Kernel_regression_Tim( load_stored_data )
+function results = Kernel_regression_Tim( load_stored_data , sitelist )
 % KERNEL_REGRESSION_TIM - main function for Kernel regressions
    
-
-
 %load_stored_data = false;
 % shallow_night = cell( 6, 1 );
 % shallow_day = cell( 6, 1 );
-shallow = cell( 8 , 1 );
-mid = cell( 8 , 1);
-deep = cell( 8 ,1);
+n = length(sitelist);
+shallow = cell( n, 1 );
+mid = cell( n , 1);
+deep = cell( n ,1);
 % deep_10_20_day = cell( 6, 1 );
 % deep_20_30_day = cell( 6, 1 );
 % deep_30plus_day = cell( 6, 1 );
- all_agg_data = cell( 8, 1 );
- climspace_shallow = cell( 8, 1 );
- climspace_mid = cell( 8, 1 );
- climspace_deep = cell( 8, 1 );
+ all_agg_data = cell( n, 1 );
+ climspace_shallow = cell( n, 1 );
+ climspace_mid = cell( n, 1 );
+ climspace_deep = cell( n, 1 );
 % climspace_deep1 = cell( 6, 1 );
 % climspace_deep2 = cell( 6, 1 );
 % climspace_deep3 = cell( 6, 1 );
-results = cell( 8, 1 );
+results = cell( n, 1 );
 %colormap_greens = flipud( cbrewer( 'seq', 'YlGn', 100 ) );
 
 % sitecode key
@@ -28,37 +27,37 @@ results = cell( 8, 1 );
 % afnames(2,:) = 'US-Ses'; % 2-SLand
 % afnames(3,:) = 'US-Sen';
 % afnames(4,:) = 'US-Wjs'; % 3-JSav
-% afnames(5,:) = 'US-Mpj'; % 4-PJ
-% 
+% afnames(5,:) = 'US-Mpj'; % 4-PJ 
 % afnames(6,:) = 'US-Vcp'; % 5-PPine
 % afnames(7,:) = 'US-Vcm'; % 6-MCon
-% 
 % %afnames(7,:) = 'US-FR2'; % 7-TX_savanna
 
-colour(1,:)=[0.9 0.5 0.0];
-colour(2,:)=[0.6 0.2 0];
-colour(3,:)=[0.25 1.0 0.0];
-colour(4,:)=[0.0 0.5 0.0];
-colour(5,:)=[0.5 0.5 1.0];
-colour(6,:)=[0.0 0.0 0.6];
+% colour(1,:)=[0.9 0.5 0.0];
+% colour(2,:)=[0.6 0.2 0];
+% colour(3,:)=[0.25 1.0 0.0];
+% colour(4,:)=[0.0 0.5 0.0];
+% colour(5,:)=[0.5 0.5 1.0];
+% colour(6,:)=[0.0 0.0 0.6];
+% ------------------------------
+% Get growing season Julian Dates
+% -------------------------------
+% config = parse_yaml_config(sitecode{},'SiteVars');
 
-firstday(1)=151;
-firstday(2)=90;
-firstday(3)=59;
-firstday(4)=59;
-firstday(5)=90;
-firstday(6)=120;
+firstday(1)=92;
+firstday(2)=92;
+firstday(3)=92;
+firstday(4)=61;
+firstday(5)=61;
+firstday(6)=61;
+firstday(7)=61;
+firstday(8)=61;
+firstday(9)=61;
 
-lastday(1)=272;
-lastday(2)=272;
-lastday(3)=303;
-lastday(4)=303;
-lastday(5)=303;
-lastday(6)=303;
+lastday = repmat(305,1, n);
 
-firstday = repmat( 1, 1, 6 );
-lastday = repmat( 365, 1, 6 );
-fprintf( 'CONSIDERING DOY 1 TO 365!\n' );
+%  firstday = repmat( 1, 1, n );
+%  lastday = repmat( 365, 1, n );
+%  fprintf( 'CONSIDERING DOY 1 TO 365!\n' );
 
 yax_min = [ 0.025, 0.025, 0.05, 0.05, 0.05, 0.05 ];
 yax_max = [ 0.15, 0.15, 0.225, 0.225, 0.22, 0.22 ];
@@ -68,15 +67,12 @@ xax_max = [ 28, 28, 24, 24, 19, 19 ];
 if load_stored_data
     load( 'kernel_regression_parsed_data.mat' );
 else
-    all_data = cell( 8, 1 );
+    all_data = cell( n, 1 );
 end
 
-sitelist = {UNM_sites.MCon, UNM_sites.PPine, ...
-    UNM_sites.SLand, UNM_sites.GLand, UNM_sites.New_GLand, ...
-    UNM_sites.JSav,  UNM_sites.PJ, UNM_sites.PJ_girdle };
-
 for  i = 1:length(sitelist)
-    sitecode = sitelist{i};
+    sitecode = sitelist{i}; % Use this if you are indexing based on UNM_sites order
+   % sitecode = i ; % Use this if indexing is based on the order of list as fed into the program (from main.m)
     % parsing takes a minutes -- option to load saved data
     if load_stored_data
         data = all_data{ i };        
@@ -92,9 +88,18 @@ for  i = 1:length(sitelist)
     mu2g=((1./1000000)*12)*60*30;
     
     % only consider data during growing season
-%     growing_season = ( ( data.DOY >= firstday( sitecode ) ) & ...
-%                        ( data.DOY <= lastday( sitecode ) ) );
-%     data = data( find( growing_season ), : );
+    growing_season = ( ( data.DOY >= firstday( i ) ) & ...
+                       ( data.DOY <= lastday( i ) ) );
+    data = data( find( growing_season ), : );
+    
+    %---------------------
+    % Remove NaN to ignore years of missing/non qced soil data
+    % This applies specifically to MCon, which we need to QC prior to the
+    % fire
+    skip_rows = ( ~isfinite(data.SWC_SHALL) & ...
+                   ~isfinite(data.SWC_MID) & ...
+                   ~isfinite(data.SWC_DEEP));
+    data(skip_rows,:) = [];
 %     
 %  Tims code separates NEE into day and nighttime values, but our files no    
 %     % separate NEE into daytime, nighttime
@@ -140,12 +145,27 @@ for  i = 1:length(sitelist)
     % calculate climate space for this site
     
     [year,~,~]=datevec(data.TIMESTAMP);
+%    day_idx = find( ~data.NIGHT );
+%    night_idx = find( data.NIGHT );
     climspace_shallow = ...
-        calculate_climate_space( sitecode, ...
+        calculate_climate_space( sitecode,...
                                  data.TA, ...
                                  data.SWC_SHALL, ...
                                  year, ...
                                  6);
+%     climspace_shallow_night = ...
+%         calculate_climate_space( sitecode, ...
+%                                  data.TA( night_idx ), ...
+%                                  data.SWC_SHALL( night_idx ), ...
+%                                  year, ...
+%                                  6);
+%     climspace_shallow_day = ...
+%              calculate_climate_space( sitecode, ...
+%                                       data.TA( day_idx ), ...
+%                                       data.SWC_SHALL( day_idx ), ...
+%                                       year, ...
+%                                       6);
+         
     climspace_mid = ...
         calculate_climate_space( sitecode, ...
                                  data.TA, ...
@@ -183,14 +203,41 @@ for  i = 1:length(sitelist)
 
     % Daily NEE
     
-    fprintf( '%s shallow /daily\n', char( UNM_sites( sitecode ) ) );
+    fprintf( '%s shallow / 24 hr \n', char( UNM_sites( sitecode ) ) );
     shallow = ... 
         kernel_regression_wrapper( sitecode, ...
                                    data.TA, ...
                                    data.SWC_SHALL, ...
                                    data.FC, ...
                                    [ 'kernel regression, ', ...
-                        'SWC 0-6 cm, daily' ] );
+                        'SWC 0-6 cm, night' ] );
+    
+    fprintf( '%s shallow /nighttime\n', char( UNM_sites( sitecode ) ) );
+    shallow_night = ... 
+        kernel_regression_wrapper( sitecode, ...
+                                   data.TA, ...
+                                   data.SWC_SHALL_NIGHT, ...
+                                   data.FC, ...
+                                   [ 'kernel regression, ', ...
+                        'SWC 0-6 cm, night' ] );
+                    
+    fprintf( '%s shallow /daytime\n', char( UNM_sites( sitecode ) ) );
+    shallow_day = ... 
+        kernel_regression_wrapper( sitecode, ...
+                                   data.TA, ...
+                                   data.SWC_SHALL_DAY, ...
+                                   data.FC, ...
+                                   [ 'kernel regression, ', ...
+                        'SWC 0-6 cm, day' ] );
+
+%     fprintf( '%s shallow /daytime\n', char( UNM_sites( sitecode ) ) );
+%     shallow_night = ... 
+%         kernel_regression_wrapper( sitecode, ...
+%                                    data.TA( day_idx ), ...
+%                                    data.SWC_SHALL( day_idx ), ...
+%                                    data.FC( day_idx ), ...
+%                                    [ 'kernel regression, ', ...
+%                         'SWC 0-6 cm, day' ] );
 
     fprintf( '%s mid /daily\n', char( UNM_sites( sitecode ) ) );    
     mid = ... 
@@ -244,9 +291,11 @@ for  i = 1:length(sitelist)
        results{ i } = ...
         site_T_SWC_flux_data( UNM_sites( sitecode ), ...
                               shallow, ...
+                              shallow_night, ...
+                              shallow_day,...
                               mid, ...
                               deep, ...
-                              climspace_shallow, ...
+                              climspace_shallow,...
                               climspace_mid, ...
                               climspace_deep, ...
                               sprintf('%s surfaces', ...
