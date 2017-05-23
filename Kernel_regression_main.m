@@ -12,14 +12,19 @@ sitelist = { UNM_sites.MCon, UNM_sites.PPine, UNM_sites.MCon_SS ...
     UNM_sites.SLand, UNM_sites.GLand, UNM_sites.New_GLand, ...
     UNM_sites.JSav,  UNM_sites.PJ, UNM_sites.PJ_girdle  };
 sitelist = {UNM_sites.GLand };
-load_stored_data = false;
-contour_var = 'NEE';
+load_stored_data = true; % Unless you are parsing new ameriflux files, this is unnecessary
+wateryear = false ; % Make Kernel
 makefigs = false;
-switch contour_var
-    case 'NEE'
-        surface_data = Kernel_regression_Tim( load_stored_data , sitelist);
-    case 'ET'
-        surface_data = Kernel_regression_ET( load_stored_data , sitelist);
+
+contour_var = 'FC'; %'RE' ,'ET_mm_dayint', 'GPP'
+
+for i = 1: length(sitelist)
+    this_site = sitelist{i}; 
+    surface_data = ...
+        Kernel_regression(  sitecode , load_stored_data , ...
+                            'surface_name' , contour_var, ...
+                            'wateryear' , wateryear );
+                               
 end
 
 if makefigs
