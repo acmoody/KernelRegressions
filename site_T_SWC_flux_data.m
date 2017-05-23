@@ -64,7 +64,8 @@ methods
             xlabel('T_s_o_i_l')
           end
     end 
-    
+    suptitle(char(UNM_sites(obj.sitecode)));
+  
     % -------------------------------
     % PLOT THE ALL-TIME CLIMATE SPACES
     
@@ -114,19 +115,30 @@ methods
 % Determine how many 3x4 figures to produce to provide better viewing of
 % the yearly (seasonal?) climate spaces.
 % This will remain constant over any given year.
-NhPanels = 3;
-year = [2007:2015];
+years = obj.clim_spaces.shallow.year_idx;
 
-%v = numel(fieldnames(obj.clim_spaces)); % vertical panels 
-v =3 ;
-if mod(numel(year),NhPanels)
-    num_figs = floor(9/NhPanels) + 1;
-    h1 = 4;
-    h2 = rem( 10, NhPanels );
+NhPanels = 3 ; 
+NvPanels = 1 ; % One vertical panel for each depth
+
+num_figs = ceil( length(years) / NhPanels ) ; 
+% 
+% if mod(numel(year),NhPanels)
+%     num_figs = floor(9/NhPanels) + 1;
+%     h1 = 4;
+%     h2 = rem( 10, NhPanels );
+% else
+%     num_figs = numel(year)/ NhPanels;
+% end % PANEL DETERMINATION
+if num_figs > 1 
+    if rem(length(years),NhPanels)
+        n_missing_yrs = NhPanels - rem(length(years),NhPanels);
+        years = min(years):1:max(years)+n_missing_yrs; 
+    end
+    year = reshape(years, NhPanels, num_figs);  
 else
-    num_figs = numel(year)/ NhPanels;
-end % PANEL DETERMINATION
-year = reshape(year, NhPanels, num_figs);    
+    NhPanels = length( years ); 
+    year = years ;
+end
 
     
     % Normalize colors to largest fraction in climate space
@@ -146,26 +158,28 @@ year = reshape(year, NhPanels, num_figs);
         h_fig2( fi ) = figure( 'Units', 'pixels', ...
                      'Position', [129 186 1473 895] ) ;
         % Loop years
-        for yi = year( 1 , fi ) : year( 3 , fi )  
-            this_year_id = yi - year( 1 , fi ) +1 ;
+        for yi = year( 1 , fi ) : year( NhPanels , fi )  
+            this_year_id = yi - year( 1 , fi ) + 1 ;
+            if ~isempty(find( years == yi))
             % FOR EACH YEAR PLOT EACH DEPTH
             for di = 1:numel(depth_flds)
                 print_title = false;
+                refyear = min(min(year)) - 1;
                 switch char(depth_flds(di))
                     case 'shallow'
                          this_cs = ...
-                             obj.clim_spaces.shallow.year_clim_space( :, : , yi - 2006  );
+                             obj.clim_spaces.shallow.year_clim_space( :, : , yi - refyear  );
                          print_title = true ;
                     case 'mid'
                          this_cs = ...
-                             obj.clim_spaces.mid.year_clim_space( : , : , yi - 2006 ) ;
+                             obj.clim_spaces.mid.year_clim_space( : , : , yi - refyear ) ;
                          
                     case 'deep'
                         this_cs = ...
-                             obj.clim_spaces.deep.year_clim_space( : , : , yi - 2006 ) ;
+                             obj.clim_spaces.deep.year_clim_space( : , : , yi - refyear ) ;
                 end    
            % Place plot in depth di and year yi (row, column)
-            this_ax = subplotrc( v, NhPanels , di,  this_year_id );
+            this_ax = subplotrc( NvPanels, NhPanels , di,  this_year_id );
             
            
            % fprintf('v = %d h = %d di = %d yi = %d\n',v,h,di,yi)
@@ -207,13 +221,14 @@ year = reshape(year, NhPanels, num_figs);
 %                 set( h_line, 'Color', 'black', 'LineStyle', ':' );
 %             end
             end % year
+            end % does year exist? 
       %  fi = fi + 1;
         end  %fig
 
   %  suptitle( char( UNM_sites( obj.sitecode ) ) );
    
     end  % plot method
-     h = [h_fig1  h_fig2(1) h_fig2(2) h_fig2(3)];
+     h = [h_fig1  h_fig2(:)];
 %--------------------------------------------------
 
 end  % methods

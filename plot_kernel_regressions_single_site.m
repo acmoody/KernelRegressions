@@ -1,7 +1,6 @@
 function h_fig = plot_kernel_regressions_single_site( shallow, ...
-                                                  deep1, ...
-                                                  deep2, ...
-                                                  deep3, ...
+                                                  mid, ...
+                                                  deep, ...
                                                   clim_space )
 % PLOT_KERNEL_REGRESSIONS_SINGLE_SITE - 
 
@@ -12,11 +11,11 @@ h_fig = figure( 'Units', 'Inches', ...
 
 % one panel for the flux kernel regression, one for each climate space year,
 % and one for the all-time climate space
-n_panels_h = numel( clim_space{ 1 }.year_idx ) + 2;
-n_panels_v = 4; % four SWC depth panels vertically
+n_panels_h = numel( clim_space.year_idx ) + 2;
+n_panels_v = 3; % four SWC depth panels vertically
 
 % plot the NEE--T--SWC surfaces
-flux_surfaces = { shallow, deep1, deep2, deep3 };
+flux_surfaces = { shallow, mid , deep };
 for i = 1:numel( flux_surfaces )
     this_ax = subplotrc( n_panels_v, n_panels_h, i, 1 );
     plot( flux_surfaces{ i }, ...
@@ -25,13 +24,13 @@ for i = 1:numel( flux_surfaces )
 end
 
 % plot the annual climate spaces
-for i = 1:numel( clim_space{ 1 }.year_idx )
-    this_ax = subplotrc( n_panels_v, n_panels_h, 1, i );
-    [ T_grid, swc_grid ] = meshgrid( clim_space{ 1 }.T_val, ...
-                                   clim_space{ 1 }.swc_val ); 
+for i = 1:numel( clim_space.year_idx )
+    this_ax = subplotrc( n_panels_v, n_panels_h, 1, i + 1 );
+    [ T_grid, swc_grid ] = meshgrid( clim_space.T_val, ...
+                                   clim_space.swc_val ); 
     contourf( this_ax, ...
               T_grid, ...
               swc_grid, ...
-              clim_space{ 1 }.year_clim_space( :, :, i ) );
+              clim_space.year_clim_space( :, :, i ) );
     title( clim_space.year_idx( i ) );
 end
